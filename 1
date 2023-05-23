@@ -1,0 +1,110 @@
+import tkinter as tk
+from tkinter import messagebox
+import json
+
+class FlashcardGame:
+    def __init__(self, master):
+        self.master = master
+        self.master.title("Flashcard Game")
+
+        self.flashcards = []
+        self.current_card = 0
+
+        self.load_flashcards()
+
+        self.card_label = tk.Label(master, text="")
+        self.card_label.pack(pady=10)
+
+        self.answer_entry = tk.Entry(master)
+        self.answer_entry.pack(pady=5)
+
+        self.next_button = tk.Button(master, text="Next Card", command=self.show_next_card)
+        self.next_button.pack(pady=5)
+
+        self.add_button = tk.Button(master, text="Add Card", command=self.add_card)
+        self.add_button.pack(pady=5)
+
+        self.modify_button = tk.Button(master, text="Modify Card", command=self.modify_card)
+        self.modify_button.pack(pady=5)
+
+        self.remove_button = tk.Button(master, text="Remove Card", command=self.remove_card)
+        self.remove_button.pack(pady=5)
+
+        self.view_button = tk.Button(master, text="View All Cards", command=self.view_all_cards)
+        self.view_button.pack(pady=5)
+
+    def show_next_card(self):
+        if self.current_card < len(self.flashcards):
+            flashcard = self.flashcards[self.current_card]
+            self.card_label.config(text=flashcard["question"])
+            self.current_card += 1
+        else:
+            self.current_card = 0
+            self.card_label.config(text="")
+            messagebox.showinfo("Flashcard Game", "End of flashcards.")
+
+    def add_card(self):
+        question = messagebox.askstring("Add Card", "Enter the question:")
+        if question:
+            answer = messagebox.askstring("Add Card", "Enter the answer:")
+            if answer:
+                flashcard = {"question": question, "answer": answer}
+                self.flashcards.append(flashcard)
+                self.save_flashcards()
+                messagebox.showinfo("Flashcard Game", "Card added successfully.")
+                self.card_label.config(text="")
+
+    def modify_card(self):
+        if self.flashcards:
+            question = messagebox.askstring("Modify Card", "Enter the new question:")
+            if question:
+                answer = messagebox.askstring("Modify Card", "Enter the new answer:")
+                if answer:
+                    flashcard = self.flashcards[self.current_card - 1]
+                    flashcard["question"] = question
+                    flashcard["answer"] = answer
+                    self.save_flashcards()
+                    messagebox.showinfo("Flashcard Game", "Card modified successfully.")
+        else:
+            messagebox.showinfo("Flashcard Game", "No flashcards to modify.")
+
+    def remove_card(self):
+        if self.flashcards:
+            confirmation = messagebox.askyesno("Remove Card", "Are you sure you want to remove this card?")
+            if confirmation:
+                self.flashcards.pop(self.current_card - 1)
+                self.current_card -= 1
+                self.save_flashcards()
+                messagebox.showinfo("Flashcard Game", "Card removed successfully.")
+                self.show_next_card()
+        else:
+            messagebox.showinfo("Flashcard Game", "No flashcards to remove.")
+
+    def view_all_cards(self):
+        top = tk.Toplevel(self.master)
+        top.title("All Cards")
+
+        text = tk.Text(top)
+        text.pack()
+
+        for flashcard in self.flashcards:
+            text.insert(tk.END, f
+            text.insert(tk.END, f"Question: {flashcard['question']}\n")
+            text.insert(tk.END, f"Answer: {flashcard['answer']}\n\n")
+        text.config(state=tk.DISABLED)
+
+    def save_flashcards(self):
+        with open("flashcards.json", "w") as file:
+            json.dump(self.flashcards, file)
+
+    def load_flashcards(self):
+        try:
+            with open("flashcards.json", "r") as file:
+                self.flashcards = json.load(file)
+        except FileNotFoundError:
+            self.flashcards = []
+
+root = tk.Tk()
+game = FlashcardGame(root)
+root.mainloop()
+
